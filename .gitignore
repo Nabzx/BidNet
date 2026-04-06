@@ -1,0 +1,7 @@
+.venv/
+compute_aware_bidding/data/
+compute_aware_bidding/outputs/
+*.pt
+*.tar.gz
+__pycache__/
+*.pyc
