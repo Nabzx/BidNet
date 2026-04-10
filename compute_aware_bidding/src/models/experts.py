@@ -53,10 +53,11 @@ class ExpertBlock(nn.Module):
             [ResidualExpert(channels) for _ in range(num_experts)]
         )
 
-    def forward(self, z: torch.Tensor) -> torch.Tensor:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         gates = self.router(z)
         batch_size = z.size(0)
         alpha = 0.1
+        compute = gates.sum(dim=1).mean()
 
         outputs = []
         for i, expert in enumerate(self.experts):
@@ -65,4 +66,4 @@ class ExpertBlock(nn.Module):
             outputs.append(gate * out)
 
         final = sum(outputs)
-        return z + alpha * final
+        return z + alpha * final, compute

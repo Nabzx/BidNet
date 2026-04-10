@@ -96,16 +96,16 @@ class ModularResNet(nn.Module):
             blocks.append(BasicBlock(out_channels, out_channels, stride=1))
         return nn.Sequential(*blocks)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.stem(x)
         x = self.stage1(x)
         x = self.stage2(x)
-        x = self.expert_block(x)
+        x, compute = self.expert_block(x)
         x = self.stage3(x)
         x = self.pool(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.classifier(x)
-        return x
+        logits = self.classifier(x)
+        return logits, compute
 
 
 SmallResNet = ModularResNet

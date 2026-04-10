@@ -19,8 +19,10 @@ class SimpleLogger:
             f"Epoch {metrics['epoch']:>3} | "
             f"train_loss={metrics['train_loss']:.4f} | "
             f"train_acc={metrics['train_accuracy']:.4f} | "
+            f"train_compute={metrics['train_compute']:.4f} | "
             f"val_loss={metrics['val_loss']:.4f} | "
             f"val_acc={metrics['val_accuracy']:.4f} | "
+            f"val_compute={metrics['val_compute']:.4f} | "
             f"time={metrics['epoch_time']:.2f}s"
         )
         self.log(message)
