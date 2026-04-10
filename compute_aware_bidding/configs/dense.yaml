@@ -18,3 +18,5 @@ training:
 model:
   base_channels: 64
   num_experts: 4
+  routing_type: "softmax"
+  top_k: 2

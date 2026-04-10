@@ -50,6 +50,9 @@ def main() -> None:
     model = SmallResNet(
         num_classes=config["num_classes"],
         base_channels=config["model"]["base_channels"],
+        num_experts=config["model"]["num_experts"],
+        routing_type=config["model"]["routing_type"],
+        top_k=config["model"]["top_k"],
     ).to(device)
 
     optimizer = torch.optim.Adam(

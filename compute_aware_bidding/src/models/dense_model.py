@@ -68,6 +68,8 @@ class ModularResNet(nn.Module):
         num_classes: int,
         base_channels: int = 64,
         num_experts: int = 4,
+        routing_type: str = "softmax",
+        top_k: int = 2,
     ) -> None:
         super().__init__()
         self.stem = nn.Sequential(
@@ -78,7 +80,12 @@ class ModularResNet(nn.Module):
 
         self.stage1 = self._make_stage(base_channels, base_channels, num_blocks=2, stride=1)
         self.stage2 = self._make_stage(base_channels, base_channels * 2, num_blocks=2, stride=2)
-        self.expert_block = ExpertBlock(channels=base_channels * 2, num_experts=num_experts)
+        self.expert_block = ExpertBlock(
+            channels=base_channels * 2,
+            num_experts=num_experts,
+            routing_type=routing_type,
+            top_k=top_k,
+        )
         self.stage3 = self._make_stage(base_channels * 2, base_channels * 4, num_blocks=2, stride=2)
 
         self.pool = nn.AdaptiveAvgPool2d((1, 1))

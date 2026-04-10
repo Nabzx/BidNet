@@ -39,6 +39,7 @@ class Trainer:
         self.lambda_lr = self.config["training"]["lambda_lr"]
 
     def train(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int) -> List[Dict[str, Any]]:
+        self.logger.log(f"Routing type: {self.config['model']['routing_type']}")
         if self.lambda_compute > 0:
             self.logger.log(
                 "Using budget controller: "

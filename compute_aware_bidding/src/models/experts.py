@@ -48,21 +48,37 @@ class ResidualExpert(nn.Module):
 
 
 class ExpertBlock(nn.Module):
-    def __init__(self, channels: int, num_experts: int = 4) -> None:
+    def __init__(
+        self,
+        channels: int,
+        num_experts: int = 4,
+        routing_type: str = "softmax",
+        top_k: int = 2,
+    ) -> None:
         super().__init__()
         self.num_experts = num_experts
+        self.routing_type = routing_type
+        self.top_k = top_k
         self.router = Router(in_channels=channels, num_experts=num_experts)
         self.experts = nn.ModuleList(
             [ResidualExpert(channels) for _ in range(num_experts)]
         )
 
     def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        gates = self.router(z)
-        top_k = 2
-        _, indices = torch.topk(gates, top_k, dim=1)
-        mask = torch.zeros_like(gates)
-        mask.scatter_(1, indices, 1.0)
-        gates = mask
+        bids = self.router(z)
+
+        if self.routing_type == "dense":
+            gates = torch.ones_like(bids)
+        elif self.routing_type == "softmax":
+            gates = torch.softmax(bids, dim=1)
+        elif self.routing_type == "topk":
+            _, indices = torch.topk(bids, self.top_k, dim=1)
+            mask = torch.zeros_like(bids)
+            mask.scatter_(1, indices, 1.0)
+            gates = mask
+        else:
+            raise ValueError(f"Unknown routing_type: {self.routing_type}")
+
         batch_size = z.size(0)
         alpha = 0.1
         compute = gates.sum(dim=1).mean()
