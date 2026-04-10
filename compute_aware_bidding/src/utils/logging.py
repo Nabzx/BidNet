@@ -20,9 +20,13 @@ class SimpleLogger:
             f"train_loss={metrics['train_loss']:.4f} | "
             f"train_acc={metrics['train_accuracy']:.4f} | "
             f"train_compute={metrics['train_compute']:.4f} | "
+            f"train_flops={metrics['train_flops']:.4f} | "
+            f"train_sparsity={metrics['train_sparsity']:.4f} | "
             f"val_loss={metrics['val_loss']:.4f} | "
             f"val_acc={metrics['val_accuracy']:.4f} | "
             f"val_compute={metrics['val_compute']:.4f} | "
+            f"val_flops={metrics['val_flops']:.4f} | "
+            f"val_sparsity={metrics['val_sparsity']:.4f} | "
             f"time={metrics['epoch_time']:.2f}s"
         )
         self.log(message)

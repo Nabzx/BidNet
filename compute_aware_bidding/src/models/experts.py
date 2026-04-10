@@ -5,6 +5,9 @@ from torch import nn
 
 from models.router import Router
 
+BASE_FLOPS = 1.0
+EXPERT_FLOPS = 0.25
+
 
 class ResidualExpert(nn.Module):
     def __init__(self, channels: int) -> None:
@@ -53,16 +56,17 @@ class ExpertBlock(nn.Module):
             [ResidualExpert(channels) for _ in range(num_experts)]
         )
 
-    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         gates = self.router(z)
         top_k = 2
-        values, indices = torch.topk(gates, top_k, dim=1)
+        _, indices = torch.topk(gates, top_k, dim=1)
         mask = torch.zeros_like(gates)
         mask.scatter_(1, indices, 1.0)
         gates = mask
         batch_size = z.size(0)
         alpha = 0.1
         compute = gates.sum(dim=1).mean()
+        flops = BASE_FLOPS + compute * EXPERT_FLOPS
 
         outputs = []
         for i, expert in enumerate(self.experts):
@@ -71,4 +75,4 @@ class ExpertBlock(nn.Module):
             outputs.append(gate * out)
 
         final = sum(outputs)
-        return z + alpha * final, compute
+        return z + alpha * final, compute, flops, gates
