@@ -64,6 +64,7 @@ def main() -> None:
         device=device,
         output_dir=output_dir,
         logger=logger,
+        config=config,
         print_every=config.get("print_every", 100),
     )
     trainer.train(

@@ -21,6 +21,7 @@ class Trainer:
         device: torch.device,
         output_dir: str,
         logger: SimpleLogger,
+        config: Dict[str, Any],
         print_every: int = 100,
     ) -> None:
         self.model = model
@@ -29,11 +30,14 @@ class Trainer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logger = logger
+        self.config = config
         self.criterion = nn.CrossEntropyLoss()
         self.history: List[Dict[str, Any]] = []
         self.print_every = print_every
 
     def train(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int) -> List[Dict[str, Any]]:
+        lambda_compute = self.config["training"]["lambda_compute"]
+        self.logger.log(f"Using lambda_compute = {lambda_compute}")
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             self.logger.log(f"Starting epoch {epoch}/{epochs}")
@@ -63,6 +67,7 @@ class Trainer:
         loss_meter = AverageMeter()
         accuracy_meter = AverageMeter()
         compute_meter = AverageMeter()
+        lambda_compute = self.config["training"]["lambda_compute"]
 
         for batch_idx, (images, targets) in enumerate(train_loader, start=1):
             images = images.to(self.device, non_blocking=True)
@@ -70,7 +75,7 @@ class Trainer:
 
             self.optimizer.zero_grad()
             logits, compute = self.model(images)
-            loss = self.criterion(logits, targets)
+            loss = self.criterion(logits, targets) + lambda_compute * compute
             loss.backward()
             self.optimizer.step()
 
