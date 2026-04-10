@@ -5,6 +5,8 @@ from typing import List
 import torch
 from torch import nn
 
+from models.experts import ExpertBlock
+
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -60,8 +62,13 @@ class BasicBlock(nn.Module):
         return out
 
 
-class SmallResNet(nn.Module):
-    def __init__(self, num_classes: int, base_channels: int = 32) -> None:
+class ModularResNet(nn.Module):
+    def __init__(
+        self,
+        num_classes: int,
+        base_channels: int = 64,
+        num_experts: int = 4,
+    ) -> None:
         super().__init__()
         self.stem = nn.Sequential(
             nn.Conv2d(3, base_channels, kernel_size=3, stride=1, padding=1, bias=False),
@@ -71,6 +78,7 @@ class SmallResNet(nn.Module):
 
         self.stage1 = self._make_stage(base_channels, base_channels, num_blocks=2, stride=1)
         self.stage2 = self._make_stage(base_channels, base_channels * 2, num_blocks=2, stride=2)
+        self.expert_block = ExpertBlock(channels=base_channels * 2, num_experts=num_experts)
         self.stage3 = self._make_stage(base_channels * 2, base_channels * 4, num_blocks=2, stride=2)
 
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -92,8 +100,12 @@ class SmallResNet(nn.Module):
         x = self.stem(x)
         x = self.stage1(x)
         x = self.stage2(x)
+        x = self.expert_block(x)
         x = self.stage3(x)
         x = self.pool(x)
         x = torch.flatten(x, start_dim=1)
         x = self.classifier(x)
         return x
+
+
+SmallResNet = ModularResNet

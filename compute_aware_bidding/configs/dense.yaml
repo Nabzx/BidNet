@@ -12,4 +12,5 @@ num_classes: 10
 device: "auto"
 output_dir: "./outputs/dense"
 model:
-  base_channels: 32
+  base_channels: 64
+  num_experts: 4
