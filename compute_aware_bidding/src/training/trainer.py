@@ -34,10 +34,17 @@ class Trainer:
         self.criterion = nn.CrossEntropyLoss()
         self.history: List[Dict[str, Any]] = []
         self.print_every = print_every
+        self.lambda_compute = self.config["training"]["lambda_compute"]
+        self.target_compute = self.config["training"]["target_compute"]
+        self.lambda_lr = self.config["training"]["lambda_lr"]
 
     def train(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int) -> List[Dict[str, Any]]:
-        lambda_compute = self.config["training"]["lambda_compute"]
-        self.logger.log(f"Using lambda_compute = {lambda_compute}")
+        self.logger.log(
+            "Using budget controller: "
+            f"lambda_compute={self.lambda_compute}, "
+            f"target_compute={self.target_compute}, "
+            f"lambda_lr={self.lambda_lr}"
+        )
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             self.logger.log(f"Starting epoch {epoch}/{epochs}")
@@ -53,6 +60,7 @@ class Trainer:
                 "val_loss": val_loss,
                 "val_accuracy": val_accuracy,
                 "val_compute": val_compute,
+                "lambda_compute": self.lambda_compute,
                 "epoch_time": epoch_time,
             }
             self.history.append(metrics)
@@ -67,7 +75,6 @@ class Trainer:
         loss_meter = AverageMeter()
         accuracy_meter = AverageMeter()
         compute_meter = AverageMeter()
-        lambda_compute = self.config["training"]["lambda_compute"]
 
         for batch_idx, (images, targets) in enumerate(train_loader, start=1):
             images = images.to(self.device, non_blocking=True)
@@ -75,9 +82,12 @@ class Trainer:
 
             self.optimizer.zero_grad()
             logits, compute = self.model(images)
-            loss = self.criterion(logits, targets) + lambda_compute * compute
+            loss = self.criterion(logits, targets) + self.lambda_compute * compute
             loss.backward()
             self.optimizer.step()
+
+            self.lambda_compute += self.lambda_lr * (compute.item() - self.target_compute)
+            self.lambda_compute = max(self.lambda_compute, 0.0)
 
             batch_size = targets.size(0)
             loss_meter.update(loss.item(), batch_size)
@@ -90,7 +100,8 @@ class Trainer:
                     f"batch {batch_idx:>4}/{len(train_loader):<4} | "
                     f"loss={loss_meter.average:.4f} | "
                     f"acc={accuracy_meter.average:.4f} | "
-                    f"compute={compute_meter.average:.4f}"
+                    f"compute={compute_meter.average:.4f} | "
+                    f"lambda_compute={self.lambda_compute:.4f}"
                 )
 
         return loss_meter.average, accuracy_meter.average, compute_meter.average
