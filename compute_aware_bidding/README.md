@@ -15,7 +15,7 @@ The routing is learned and differentiable, so the whole system can be trained en
 
 ## Motivation
 
-A lot of modern models are quite inefficient in the sense that they apply the same amount of computation to easy and difficult inputs. That does not seem ideal.
+Following my final stage interview at the company Graphcore, I really liked the work that they were doing in optimising chips for AI. Following some conversations with engineers there, I realised a lot of modern models are quite inefficient in the sense that they apply the same amount of computation to easy and difficult inputs. That does not seem ideal.
 
 I wanted to explore whether a relatively simple system could learn to reduce compute where it is not needed while still maintaining reasonable accuracy.
 
