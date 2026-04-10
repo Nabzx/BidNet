@@ -56,6 +56,7 @@ class ExpertBlock(nn.Module):
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         weights = self.router(z)
         batch_size = z.size(0)
+        alpha = 0.1
 
         outputs = []
         for i, expert in enumerate(self.experts):
@@ -63,4 +64,5 @@ class ExpertBlock(nn.Module):
             weight = weights[:, i].view(batch_size, 1, 1, 1)
             outputs.append(weight * out)
 
-        return sum(outputs)
+        final = sum(outputs)
+        return z + alpha * final
