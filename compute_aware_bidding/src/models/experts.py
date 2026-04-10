@@ -3,6 +3,8 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from models.router import Router
+
 
 class ResidualExpert(nn.Module):
     def __init__(self, channels: int) -> None:
@@ -46,11 +48,19 @@ class ExpertBlock(nn.Module):
     def __init__(self, channels: int, num_experts: int = 4) -> None:
         super().__init__()
         self.num_experts = num_experts
+        self.router = Router(in_channels=channels, num_experts=num_experts)
         self.experts = nn.ModuleList(
             [ResidualExpert(channels) for _ in range(num_experts)]
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        outputs = [expert(x) for expert in self.experts]
-        stacked_outputs = torch.stack(outputs, dim=0)
-        return stacked_outputs.mean(dim=0)
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        weights = self.router(z)
+        batch_size = z.size(0)
+
+        outputs = []
+        for i, expert in enumerate(self.experts):
+            out = expert(z)
+            weight = weights[:, i].view(batch_size, 1, 1, 1)
+            outputs.append(weight * out)
+
+        return sum(outputs)
