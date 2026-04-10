@@ -17,4 +17,4 @@ class Router(nn.Module):
         pooled = self.pool(z)
         pooled = torch.flatten(pooled, start_dim=1)
         bids = self.linear(pooled)
-        return torch.sigmoid(bids)
+        return torch.softmax(bids, dim=1)

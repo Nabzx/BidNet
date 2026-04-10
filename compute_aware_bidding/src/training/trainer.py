@@ -39,12 +39,15 @@ class Trainer:
         self.lambda_lr = self.config["training"]["lambda_lr"]
 
     def train(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int) -> List[Dict[str, Any]]:
-        self.logger.log(
-            "Using budget controller: "
-            f"lambda_compute={self.lambda_compute}, "
-            f"target_compute={self.target_compute}, "
-            f"lambda_lr={self.lambda_lr}"
-        )
+        if self.lambda_compute > 0:
+            self.logger.log(
+                "Using budget controller: "
+                f"lambda_compute={self.lambda_compute}, "
+                f"target_compute={self.target_compute}, "
+                f"lambda_lr={self.lambda_lr}"
+            )
+        else:
+            self.logger.log("Using lambda_compute = 0.0 (no compute penalty, controller disabled)")
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             self.logger.log(f"Starting epoch {epoch}/{epochs}")
@@ -86,8 +89,9 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            self.lambda_compute += self.lambda_lr * (compute.item() - self.target_compute)
-            self.lambda_compute = max(self.lambda_compute, 0.0)
+            if self.lambda_compute > 0:
+                self.lambda_compute += self.lambda_lr * (compute.item() - self.target_compute)
+                self.lambda_compute = max(self.lambda_compute, 0.0)
 
             batch_size = targets.size(0)
             loss_meter.update(loss.item(), batch_size)

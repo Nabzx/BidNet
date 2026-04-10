@@ -12,8 +12,8 @@ num_classes: 10
 device: "auto"
 output_dir: "./outputs/dense"
 training:
-  lambda_compute: 0.01
-  target_compute: 0.5
+  lambda_compute: 0.0
+  target_compute: 0.05
   lambda_lr: 0.01
 model:
   base_channels: 64

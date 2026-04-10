@@ -55,6 +55,11 @@ class ExpertBlock(nn.Module):
 
     def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         gates = self.router(z)
+        top_k = 2
+        values, indices = torch.topk(gates, top_k, dim=1)
+        mask = torch.zeros_like(gates)
+        mask.scatter_(1, indices, 1.0)
+        gates = mask
         batch_size = z.size(0)
         alpha = 0.1
         compute = gates.sum(dim=1).mean()
