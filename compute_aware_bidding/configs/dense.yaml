@@ -4,7 +4,7 @@ batch_size: 128
 num_workers: 2
 debug_subset_train: null
 debug_subset_val: null
-epochs: 10
+epochs: 5
 print_every: 100
 learning_rate: 0.001
 weight_decay: 0.0001
